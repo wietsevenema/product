@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Home Page</title>
+    <style>
+        .products {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .product-tile {
+            padding: 2%;
+            width: 150px;
+            flex-direction: column;
+            border: 1px solid darkgrey;
+            display: flex;
+        }
+        .product-info{
+            margin-bottom: auto;
+        }
+        .product-image {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+        }
+        .product-price {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #000;
+            float: right;
+            letter-spacing: -1px;
+        }
+        img {
+            height: 150px;
+            max-width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <section>
+        <h2>Random picks</h2>
+        <div class="products">
+        {{range .Products}}
+            <div class="product-tile">
+                <div class="product-image">
+                    <img src="{{.Image}}">
+                </div>
+                <div class="product-info">
+                    {{.Name}}
+                </div>
+                <div class="product-price">${{div .Price  100}}</div>
+            </div>
+        {{end}}
+        </div>
+    </section>
+
+</body>
+
+</html>
