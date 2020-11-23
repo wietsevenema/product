@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/yfuruyama/crzerolog"
 
-	model "products"
+	model "products/internal"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -22,12 +24,14 @@ type Service struct {
 func Port() string {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8081"
+		port = "8080"
 	}
 	return port
 }
 
 func main() {
+	rootLogger := zerolog.New(os.Stdout)
+	middleware := crzerolog.InjectLogger(&rootLogger)
 
 	dbPath := "./products.db"
 	database, err := sql.Open("sqlite3",
@@ -39,7 +43,11 @@ func main() {
 	}
 	service := &Service{database: database}
 
-	http.HandleFunc("/random/", service.serveProducts)
+	http.Handle("/", middleware(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/random/", http.StatusTemporaryRedirect)
+		})))
+	http.Handle("/random/", middleware(http.HandlerFunc(service.serveProducts)))
 
 	// Start server
 	log.Info().Msg("Listening on port " + Port())
@@ -74,6 +82,8 @@ func (s *Service) serveProducts(w http.ResponseWriter, r *http.Request) {
 			sendErr(w, err)
 			return
 		}
+		logger := log.Ctx(r.Context())
+		logger.Info().Str("productID", p.ProductID).Str("brand", p.Brand).Msg("Product")
 		products = append(products, p)
 	}
 

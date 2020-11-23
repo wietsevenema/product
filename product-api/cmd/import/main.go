@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
-	model "products"
+	model "products/internal"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -19,7 +19,7 @@ import (
 
 func main() {
 
-	sourcePath := "./import/data/products.json.gz"
+	sourcePath := "./assets/products/products.json.gz"
 	dbPath := "./products.db"
 
 	_, err := os.Stat(dbPath)
@@ -69,8 +69,8 @@ func main() {
 		log.Printf("Importing products from %s", sourcePath)
 		i := 0
 		for ; decoder.More(); i++ {
-			if i%10 != 0 {
-				continue
+			if i > 5000 {
+				break
 			}
 			var raw ProductRaw
 			err = decoder.Decode(&raw)
@@ -104,6 +104,7 @@ func main() {
 			panicOnError(err)
 		}
 		log.Printf("Imported %d products", i)
+		break
 	}
 }
 

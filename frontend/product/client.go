@@ -38,10 +38,10 @@ func NewClient(baseURL string) (*Client, error) {
 func (c *Client) GetProducts(ctx context.Context) (*[]Product, error) {
 	url := fmt.Sprintf("%s/random/", c.serviceURL)
 	req, err := http.NewRequest("GET", url, nil)
+	req = req.WithContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-
 	resp, err := c.http.Do(req) // Adds ID Token to request
 	if err != nil {
 		return nil, err

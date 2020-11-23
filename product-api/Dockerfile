@@ -1,20 +1,24 @@
-FROM golang:1.13-buster as gobuilder
+FROM golang:1.15-buster as base
 
-WORKDIR /app
-COPY . .
+WORKDIR /src
+COPY go.* ./
+RUN go mod download
 
-ENV GOOS linux
-ENV GOARCH amd64
-# Create a sqllite database file with products from the products.json.gz
-RUN go run products/import
+FROM base as import
+COPY assets assets/
+COPY cmd/import cmd/import
+COPY internal internal
+RUN go run products/cmd/import
 
-# Compile the product service
-RUN go build -o main products/server
+FROM base as build
+COPY cmd cmd
+COPY internal internal
+RUN go build products/cmd/server
 
 # Debian10 is Debian Buster (same as the build image)
-FROM gcr.io/distroless/base-debian10
+FROM gcr.io/distroless/base-debian10:nonroot
 WORKDIR /app
-COPY --from=gobuilder /app/main /app/main
-COPY --from=gobuilder /app/products.db /app/products.db
+COPY --from=import /src/products.db /app/products.db
+COPY --from=build /src/server /app/server
 
-ENTRYPOINT ["./main"]
+ENTRYPOINT ["./server"]

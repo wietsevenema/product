@@ -9,7 +9,9 @@ import (
 	"products-frontend/lib/run"
 	"products-frontend/product"
 
+	"contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	"github.com/Masterminds/sprig"
+	"go.opencensus.io/plugin/ochttp"
 )
 
 type App struct {
@@ -25,7 +27,7 @@ func Port() string {
 }
 
 func main() {
-	client, err := product.NewClient(os.Getenv("PRODUCTS_URL"))
+	client, err := product.NewClient(os.Getenv("PRODUCT_API"))
 	if err != nil {
 		panic(err)
 	}
@@ -33,9 +35,17 @@ func main() {
 	app := &App{product: client}
 	http.HandleFunc("/", app.serveIndex)
 
-	// Start server
-	log.Println("Listening on port " + Port())
-	log.Fatal(http.ListenAndServe(":"+Port(), nil))
+	httpHandler := &ochttp.Handler{
+		// Use the Google Cloud propagation format.
+		Propagation: &propagation.HTTPFormat{},
+	}
+	if err := http.ListenAndServe(":"+Port(), httpHandler); err != nil {
+		log.Fatal(err)
+	}
+
+	// // Start server
+	// log.Println("Listening on port " + Port())
+	// log.Fatal(http.ListenAndServe(":"+Port(), nil))
 }
 
 // serveIndex returns the index.html file
